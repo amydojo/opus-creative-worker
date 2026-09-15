@@ -1,7 +1,8 @@
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
 import { OPUS_SYSTEM_PROMPT } from "@/lib/ai/opus-prompt";
-import { OpusPackageSchema } from "@/lib/ai/opus-package";
+import { OpusPackageSchema, type OpusDeliverable } from "@/lib/ai/opus-package";
+import { saveDeliverableToNotion } from "@/lib/notion/save-deliverable";
 
 export const maxDuration = 60;
 
@@ -64,18 +65,66 @@ export async function POST(request: Request) {
 // Temporary preview-only runtime smoke. Removed after validation.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  if (process.env.VERCEL_ENV !== "preview" || searchParams.get("smoke") !== "opus-v02") {
+  if (process.env.VERCEL_ENV !== "preview") {
     return new Response("Not found", { status: 404 });
   }
 
-  try {
-    return Response.json(await createPackage({
-      sourceLabel: "Runtime smoke · Frew POV",
-      campaign: "",
-      objective: "Build trust through surgeon judgment without inventing claims.",
-      transcript: "I do not start with a procedure name. I start by looking at the skin, the tissue, the proportions, and what is actually bothering the patient. Sometimes the right answer is less surgery, not more. The plan depends on what I see in front of me.",
-    }));
-  } catch (error) {
-    return errorResponse(error);
+  if (searchParams.get("notionSmoke") === "opus-v02") {
+    const smokeDeliverable = {
+      deliverable: "[SMOKE TEST] AI Package Lane · Frew POV",
+      job: "Trust",
+      funnel: "Consider",
+      sourceLane: "Frew",
+      format: "Reel",
+      channels: ["Instagram"],
+      campaign: "Runtime Smoke",
+      hook: "Sometimes the right answer is less surgery, not more.",
+      oneMessage: "Surgical planning begins with evaluation, not a predetermined procedure.",
+      proof: "Source-backed physician statement used only to validate the pipeline write path.",
+      cta: "",
+      primaryKpi: "Saves",
+      testVariable: "Hook",
+      editorialPremise: "Judgment should come before procedure selection.",
+      whyThisMatters: "It demonstrates how Frew reasons without promising a result or diagnosing the viewer.",
+      copy: {
+        onScreenTitle: "JUDGMENT BEFORE PROCEDURE",
+        caption: "The procedure is not the starting point. Evaluation is.\n\nSometimes the more thoughtful plan is less intervention, not more.",
+        storyFrames: [],
+      },
+      qualityGate: {
+        utility: true,
+        novelty: true,
+        desire: false,
+        humanity: true,
+        proof: true,
+        score: 4,
+      },
+      riskFlags: [],
+      nextStep: "Archive after validating the deployed Notion save path.",
+    } satisfies OpusDeliverable;
+
+    try {
+      return Response.json(await saveDeliverableToNotion(smokeDeliverable, "draft"));
+    } catch (error) {
+      return Response.json(
+        { error: error instanceof Error ? error.message : "Notion smoke failed." },
+        { status: 500 },
+      );
+    }
   }
+
+  if (searchParams.get("smoke") === "opus-v02") {
+    try {
+      return Response.json(await createPackage({
+        sourceLabel: "Runtime smoke · Frew POV",
+        campaign: "",
+        objective: "Build trust through surgeon judgment without inventing claims.",
+        transcript: "I do not start with a procedure name. I start by looking at the skin, the tissue, the proportions, and what is actually bothering the patient. Sometimes the right answer is less surgery, not more. The plan depends on what I see in front of me.",
+      }));
+    } catch (error) {
+      return errorResponse(error);
+    }
+  }
+
+  return new Response("Not found", { status: 404 });
 }
