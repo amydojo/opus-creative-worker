@@ -10,8 +10,12 @@ const hardGateFlags = new Set([
   "compliance_unknown",
 ]);
 
+export function riskFlagsRequireHumanApproval(riskFlags: readonly string[]) {
+  return riskFlags.some((flag) => hardGateFlags.has(flag));
+}
+
 export function requiresHumanApproval(unit: ContentUnit) {
-  return unit.riskFlags.some((flag) => hardGateFlags.has(flag));
+  return riskFlagsRequireHumanApproval(unit.riskFlags);
 }
 
 export function evaluatePublishGate(unit: ContentUnit) {

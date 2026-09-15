@@ -141,3 +141,81 @@ The goal is not another dashboard to babysit. The target interaction is closer t
 > Package this approved Ask Dr. Frew clip.
 
 OPUS OS should do the repetitive work, then surface only the decisions that actually require a person.
+
+---
+
+## AI Package Lane V0.2
+
+The AI Package Lane adds a human-gated editorial intelligence step without changing the authority model above.
+
+`RAW TRANSCRIPT → OPUS AI PACKAGE → HUMAN REVIEW → EXISTING NOTION CONTENT PIPELINE → CANVA / QA / APPROVAL`
+
+Open `/opus-playground` to paste a real transcript, optional source label, campaign, and objective. The server uses Vercel AI SDK 7 structured output with AI Gateway model `openai/gpt-5.6-sol`. The model is constrained to the existing OPUS vocabulary for Job, Funnel, Source Lane, Channel, Format, Primary KPI, and Test Variable.
+
+### Save behavior
+
+Generation never mutates Notion. A person reviews and can edit the primary package first.
+
+- `SAVE DRAFT` creates exactly one existing Content Pipeline record with `Stage = Inbox`.
+- `SEND FOR REVIEW` creates exactly one record with `Stage = Approval` and `Approval = Needs approval`.
+- AI-created records always start with `Paid-use rights = Unknown` and `Boost Status = Not planned`.
+- Hard-risk flags also force `Approval = Needs approval` even when the record is only saved as an Inbox draft.
+- Derivatives are suggestions until individually selected. Selected derivatives save as separate Inbox records because the Content Pipeline contract is one record per real deliverable.
+- The AI lane cannot set Scheduled, Published, Approved, Paid cleared, Clinical Set, Clinical Consent, Clinical QA, or Clinical Approval.
+
+### Current Notion target
+
+The AI lane writes only to the existing `OPUS · Content Pipeline` data source:
+
+`38148c16-95da-4a40-b6f0-bc664ca04e02`
+
+No schema changes are required. Canonical database properties receive the compact execution fields; richer material such as editorial premise, caption, Story frames, quality gate, risk flags, and next step lives in the created page body.
+
+### Environment
+
+Vercel deployments use AI Gateway OIDC automatically, so no model-provider secret is required in Preview or Production.
+
+Required for Notion save actions:
+
+```bash
+NOTION_ACCESS_TOKEN=secret_...
+```
+
+Optional override (the known canonical ID is used as a safe non-secret fallback):
+
+```bash
+NOTION_CONTENT_PIPELINE_DATA_SOURCE_ID=38148c16-95da-4a40-b6f0-bc664ca04e02
+```
+
+For local AI Gateway use outside `vercel dev`, set `AI_GATEWAY_API_KEY` or pull the project's Vercel OIDC environment.
+
+Never commit `.env` files or secrets.
+
+### Local setup
+
+```bash
+npm install
+npm run dev
+```
+
+Validation is intentionally part of the production build:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+The `build` script runs `typecheck` before `next build`, so a Vercel preview cannot pass while TypeScript is broken.
+
+### Architecture files
+
+- `lib/ai/opus-prompt.ts` — locked OPUS editorial/brand/growth/compliance intelligence
+- `lib/ai/opus-package.ts` — structured output schema using canonical Content Pipeline vocabulary
+- `app/api/opus/package/route.ts` — AI SDK 7 structured-generation route
+- `lib/notion/client.ts` — Notion API `2026-03-11` client and canonical data source target
+- `lib/notion/save-deliverable.ts` — single-record, human-gated Notion write path
+- `app/api/opus/notion/route.ts` — validated save endpoint
+- `app/opus-playground/page.tsx` — editable operator surface and derivative selection
+- `lib/policy.ts` — shared hard-risk gate used by both the original worker and AI package lane
+
+The Creative Desk remains the main dashboard. The AI Playground is an additional operator surface, not a replacement control plane.
