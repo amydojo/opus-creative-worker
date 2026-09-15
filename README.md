@@ -1,6 +1,6 @@
 # OPUS Creative Worker / OPUS OS
 
-OPUS Creative Worker is the production layer for Opus Plastic Surgery marketing: a small creative OS that turns approved source material into channel-ready social, ad, YouTube, Story, and patient-education assets with as little repetitive manual work as possible.
+OPUS Creative Worker is the production layer for Opus Plastic Surgery marketing: a small creative OS that turns approved source material into channel-ready social, ad, YouTube, Story, Google Business, and patient-education assets with as little repetitive manual work as possible.
 
 ## Core rule
 
@@ -20,13 +20,13 @@ No Canva database. No parallel calendar. No duplicate approval tracker. No new s
 
 ## System shape
 
-`SOURCE → PYTHON MEDIA WORKER → CONTENT UNIT → CANONICAL TEMPLATE ID → CANVA GOLD MASTER → QA → REVIEW → PRODUCTION PACK → READY`
+`SOURCE → PYTHON MEDIA WORKER → CONTENT UNIT → CANONICAL TEMPLATE ID → CANVA RENDER CONTRACT → QA → CHANNEL ADAPTERS → REVIEW → PRODUCTION PACK → READY`
 
 ### GitHub — brain
-Versioned schemas, routing, master registry, pack profiles, QA rules, tests, and the Python media worker live here.
+Versioned schemas, routing, master registry, pack profiles, QA rules, tests, channel adapters, and the Python media worker live here.
 
 ### Vercel — orchestrator
-Next.js is the control plane. It owns job state, template routing, copy-capacity QA, approval gates, production-pack planning, and the Canva execution seam.
+Next.js is the control plane. It owns job state, template routing, copy-capacity QA, approval/rights gates, production-pack planning, and the Canva execution seam.
 
 ### Python media worker — heavy media lane
 Python owns deterministic media processing: probing, contact sheets, proxy/frame generation, later ASR, scene/silence segmentation, matched before/after crops, and upload manifests.
@@ -34,7 +34,9 @@ Python owns deterministic media processing: probing, contact sheets, proxy/frame
 ### Canva — production bay
 Figma remains the forge for inventing visual systems. Canva receives only proven patterns worth reproducing. OPUS OS selects layouts; it does not generate layouts from a blank canvas.
 
-## Canva V1 gold masters
+## Canva render contracts
+
+### Six V1 gold masters
 
 Stable analytics/routing IDs:
 
@@ -45,11 +47,22 @@ Stable analytics/routing IDs:
 - `OPUS-TPL-EVIDENCE-4X5-I-V01`
 - `OPUS-TPL-FIELD-4X5-Q-V01`
 
+These remain the canonical reusable visual instruments.
+
+### Channel masters
+
+Two platform behaviors are sufficiently different to justify dedicated masters:
+
+- `OPUS-TPL-LOCAL-4X3-Q-V01` — Google Business Profile / local factual update · 1200×900
+- `OPUS-TPL-THUMB-16X9-E-V01` — long-form YouTube thumbnail · 1280×720
+
+They are **channel masters, not new strategy families**. TikTok, Facebook, YouTube Shorts and Meta paid reuse the existing gold masters through adapters.
+
 The canonical Template ID stays stable even if the implementation pointer to a Canva design changes after an intentional Figma → Canva promotion.
 
-## Production Packer V1
+## Production Packer V2
 
-The first proven package profile is intentionally narrow:
+The first pressure-tested content profile remains:
 
 `TRUST + Frew + PORTRAIT 9:16 → Ask Dr. Frew pack`
 
@@ -61,14 +74,33 @@ It produces three bounded production roles:
 
 The feed derivative is not a resized cover. It is a separate authored spatial system using the same strategy record and source idea.
 
-`POST /api/package` requires the existing Content Pipeline Job, Source Lane, canonical Template ID, and strategy fields. It refuses unproven pack combinations instead of inventing new families.
+`POST /api/package` now also accepts `Format`, `Channel`, `Approval`, and `Paid-use rights` so it can emit only the useful channel surfaces and adapters while preserving the existing Content Pipeline gates.
 
-### Measured copy QA
+### Channel adapter matrix
+
+Adapters do not create duplicate Canva template families:
+
+- **TikTok 9:16** → PORTRAIT · first-frame hook, TikTok UI-safe zones, no Instagram-specific CTA
+- **Facebook Reels 9:16** → PORTRAIT · same visual contract, channel nuance in native post copy
+- **Facebook Feed 4:5** → COLUMN · editorial feed derivative, never a crop of the vertical cover
+- **YouTube Shorts 9:16** → PORTRAIT · silent-safe clarity; title/description stay native to YouTube
+- **Meta Paid 9:16** → SIGNAL · silent-safe, message-match, compliance metadata when required
+- **Meta Paid 4:5** → COLUMN · explicit conversion clarity while preserving the original creative job
+
+Meta paid adapters fail closed until both Content Pipeline approval and paid-use rights are cleared.
+
+### Dedicated channel outputs
+
+- **Google Business Profile 4:3** uses `LOCAL-4X3-Q` only for factual/local-appropriate Source Lanes.
+- **YouTube 16:9 thumbnail** uses `THUMB-16X9-E` only for `Long-form` content. Shorts continue to reuse the vertical master.
+
+## Measured copy QA
 
 Real production pressure tests taught the system layout capacity:
 
 - PORTRAIT 9:16 fails closed when display/support copy exceeds measured master capacity.
 - COLUMN 4:5 checks both total copy capacity and longest display line, because a short single-line headline can still expand into the media column.
+- LOCAL 4:3 and THUMB 16:9 have bounded headline/metadata capacities from their authored channel masters.
 - QA returns `COPY_REVIEW` / `COPY_CAPACITY_EXCEEDED`; automation must shorten, reroute, or insert an authored line break. It must **never shrink typography until copy fits**.
 
 ## Canva execution reality
@@ -85,21 +117,25 @@ The API exposes this honestly as a plugin-bound execution seam. If the Canva pla
 
 - `OPUS · BRAND SYSTEM`
 - `OPUS · MASTER RACK`
+  - `01 · VERTICAL · 9×16`
+  - `02 · FEED · 4×5`
+  - `03 · LOCAL · 4×3`
+  - `04 · LONG FORM · 16×9`
 - `OPUS · CAMPAIGN KITS`
 - `OPUS · PRODUCTION / YYYY-MM / series-or-campaign`
 - `OPUS · ARCHIVE`
 
 Campaign kits contain references or campaign-ready copies, never new design-system authority. Production contains real instances, never canonical masters.
 
-## Creative Desk V0.5
+## Creative Desk V0.6
 
 - `MAKE IT` creates the primary production job.
-- `PACKAGE IT` appears only for the first pressure-tested Ask Dr. Frew profile.
-- The packer returns the three canonical derivative roles and per-output QA state.
+- `PACKAGE IT` returns authored Canva surfaces plus channel adapters.
+- The pack view exposes each unique render role, Template ID, QA state, channel adapter, surface, and gate state.
 - No auto-publishing.
-- Approval, rights, and compliance gates remain intact.
+- Approval, paid-use rights, clinical/compliance, and spend gates remain intact.
 
-The UI expands pack profiles only after they are proven in real production; it does not assume every content item deserves the same derivative bundle.
+The UI expands reusable contracts only after they are deliberately authored or proven; it does not assume every content item deserves the same derivative bundle.
 
 ## Golden path
 
@@ -107,10 +143,10 @@ The UI expands pack profiles only after they are proven in real production; it d
 2. Run deterministic media prep in Python.
 3. Resolve the existing Notion strategy record.
 4. Select the canonical Template ID.
-5. Populate a copied Canva gold master with bounded content.
+5. Populate a copied Canva render contract with bounded content.
 6. Run copy/layout/compliance QA.
-7. Pause when approval is required.
-8. If a proven pack profile exists, create only the useful surface derivatives.
+7. Apply channel adapters instead of creating duplicate template families.
+8. Pause when approval or rights are required.
 9. File production instances in Canva and return links to the existing Notion record.
 10. Publish only after the existing approval workflow clears the asset.
 
@@ -127,17 +163,16 @@ A production pack never changes `Approval`, `Paid-use rights`, or publishing sta
 
 ## Next gates
 
-1. Finish the first real Ask Dr. Frew pack and preserve the measured layout learnings.
-2. Add Notion-to-packer payload sync so the control plane consumes the execution record without duplicated strategy data.
-3. Add durable workflow pause/resume for Canva plugin-bound steps.
-4. Add ASR + clip scoring to the Python media worker.
-5. Add before/after pairing, matched crop solving, and READY_UPLOAD manifests.
-6. Promote another pack profile only after repeated production friction proves the need.
+1. Consume current Notion execution records directly in PACKAGE IT instead of duplicating strategy fields in the UI request.
+2. Add durable workflow pause/resume for Canva plugin-bound steps.
+3. Add ASR + clip scoring to the Python media worker.
+4. Add before/after pairing, matched crop solving, and READY_UPLOAD manifests.
+5. Promote another content-specific pack profile only after repeated production friction proves the need.
 
 ## Operating principle
 
 The goal is not another dashboard to babysit. The target interaction is closer to:
 
-> Package this approved Ask Dr. Frew clip.
+> Package this approved source for the channels already on the Content Pipeline record.
 
 OPUS OS should do the repetitive work, then surface only the decisions that actually require a person.
