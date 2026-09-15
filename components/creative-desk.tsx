@@ -1,48 +1,66 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { cloudV2Packages, cloudV2Summary, type CloudPackage } from '@/lib/cloud-v2-packages';
+import { cloudV2Packages, type CloudPackage } from '@/lib/cloud-v2-packages';
 
-type ReviewState = 'REVIEW' | 'READY' | 'SKIP';
-type Item = CloudPackage & { reviewState: ReviewState };
-const lanes = ['all','youtube_anchor','shorts','google_business'] as const;
-type Lane = typeof lanes[number];
+type Decision='RECOMMENDED'|'APPROVED'|'PASS';
+type Stage='TODAY'|'PRODUCTION'|'READY';
+type Item=CloudPackage & { decision:Decision; stage:Stage; recommended:boolean; compliance:'CLEAR'|'CHECK'; outputs:string[]; rationale:string };
 
-function stamp(seconds: number) { const m=Math.floor(seconds/60); const s=Math.floor(seconds%60); return `${m}:${String(s).padStart(2,'0')}`; }
-function laneLabel(lane: string) { return lane.replaceAll('_',' ').toUpperCase(); }
+const priority=['opus-04e9e898fc71','opus-f28e0d28b915','opus-dcb641f936fc','opus-afb7e620170d'];
+const outputMap:Record<string,string[]>={
+ 'opus-04e9e898fc71':['IG Reel','TikTok','YouTube Short'],
+ 'opus-f28e0d28b915':['IG Reel','TikTok','Story'],
+ 'opus-dcb641f936fc':['IG Reel','Story','TikTok'],
+ 'opus-afb7e620170d':['IG Carousel/Reel','Story'],
+ 'opus-31e345937a0f':['IG Reel','TikTok','Story'],
+ 'opus-ee247f427667':['IG Reel','TikTok','Story'],
+ 'opus-4976083473be':['IG Reel','TikTok'],
+ 'opus-dfa0d1bd747f':['Google Business','IG Reel'],
+};
+const rationale:Record<string,string>={
+ 'opus-04e9e898fc71':'Strong surgeon-authority answer with a useful consultation insight.',
+ 'opus-f28e0d28b915':'Sharp consumer-education hook with immediate save value.',
+ 'opus-dcb641f936fc':'Makes the patient experience concrete through Tamara instead of generic service language.',
+ 'opus-afb7e620170d':'Clean introduction that gives Tamara a real role in the OPUS story.',
+ 'opus-31e345937a0f':'Specific evidence standard that reinforces the before/after accountability position.',
+ 'opus-ee247f427667':'Human, light construction content that breaks up the authority-heavy batch.',
+ 'opus-4976083473be':'Contrarian surgeon-selection hook with strong search/social utility.',
+ 'opus-dfa0d1bd747f':'Strong judgment signal, but safety language needs deliberate review.',
+};
+function stamp(seconds:number){const m=Math.floor(seconds/60);const s=Math.floor(seconds%60);return `${m}:${String(s).padStart(2,'0')}`}
 
-export function CreativeDesk() {
-  const [lane, setLane] = useState<Lane>('all');
-  const [items, setItems] = useState<Item[]>(cloudV2Packages.map((item) => ({...item, reviewState:'REVIEW'})));
-  const visible = useMemo(() => items.filter((item) => item.reviewState !== 'SKIP' && (lane === 'all' || item.lane === lane)), [items,lane]);
-  const approved = items.filter((item) => item.reviewState === 'READY').length;
-  const needsReview = items.filter((item) => item.reviewState === 'REVIEW').length;
-  function setState(id:string, reviewState:ReviewState) { setItems((current) => current.map((item) => item.id===id ? {...item,reviewState} : item)); }
+export function CreativeDesk(){
+ const [tab,setTab]=useState<Stage>('TODAY');
+ const [expanded,setExpanded]=useState<string|null>(null);
+ const [items,setItems]=useState<Item[]>(cloudV2Packages.map(x=>({...x,decision:'RECOMMENDED',stage:'TODAY',recommended:priority.includes(x.id),compliance:x.reviewFlags.some(f=>/medical|before\/after|service|verify/i.test(f))?'CHECK':'CLEAR',outputs:outputMap[x.id]??['IG Reel'],rationale:rationale[x.id]??'Useful source-backed moment from the Thursday batch.'})));
+ const today=useMemo(()=>items.filter(x=>x.stage===tab&&x.decision!=='PASS').sort((a,b)=>Number(b.recommended)-Number(a.recommended)),[items,tab]);
+ const recommended=items.filter(x=>x.stage==='TODAY'&&x.recommended&&x.decision==='RECOMMENDED');
+ const approved=items.filter(x=>x.decision==='APPROVED').length;
+ const approve=(id:string)=>setItems(xs=>xs.map(x=>x.id===id?{...x,decision:'APPROVED',stage:'PRODUCTION'}:x));
+ const approveBatch=()=>setItems(xs=>xs.map(x=>x.stage==='TODAY'&&x.recommended&&x.decision==='RECOMMENDED'?{...x,decision:'APPROVED',stage:'PRODUCTION'}:x));
+ const pass=(id:string)=>setItems(xs=>xs.map(x=>x.id===id?{...x,decision:'PASS'}:x));
 
-  return <main>
-    <section className="topbar">
-      <div><p className="eyebrow">OPUS CREATIVE DESK / EDITORIAL PASS 01</p><h1>Eight moments worth your attention.</h1><p className="lede">The worker found 148 candidates. This pass removes slate junk, weak cut boundaries, duplicate ideas and generic machine copy so you only review the strongest usable directions.</p></div>
-      <div className="summaryCard"><span className="tiny">THURSDAY SHOOT</span><strong>CURATED SHORTLIST</strong><div className="summaryGrid"><div><b>{cloudV2Summary.candidates}</b><span>scanned</span></div><div><b>{items.length}</b><span>shortlisted</span></div><div><b>{approved}</b><span>approved</span></div></div></div>
-    </section>
+ return <main>
+  <section className="cockpitHead"><div><p className="eyebrow">OPUS CREATIVE OS / V0.3</p><h1>Make the week.</h1><p className="lede">Thursday is processed. You do not need to review 148 clips — just decide which ideas deserve production.</p></div><div className="weekBox"><span className="tiny">THIS BATCH</span><strong>{recommended.length||approved} recommended now</strong><p>Expected from the current four: 4 core pieces + 7 derivative placements.</p><button onClick={approveBatch} disabled={!recommended.length}>APPROVE RECOMMENDED {recommended.length||4}</button></div></section>
 
-    <section className="actionBar"><div><span className="statusDot" /><span>TRANSCRIPT CLEANUP APPLIED · {needsReview} DECISIONS LEFT</span></div><span className="tiny">SOURCE VERIFY BEFORE EXPORT</span></section>
+  <nav className="cockpitNav">{(['TODAY','PRODUCTION','READY'] as Stage[]).map(x=><button key={x} className={tab===x?'active':''} onClick={()=>setTab(x)}>{x}{x==='PRODUCTION'&&approved?` · ${approved}`:''}</button>)}</nav>
 
-    <section className="resultsHeader"><div><p className="eyebrow">DECISION INBOX</p><h2>Approve the idea, not the machine output.</h2></div><p>Clean transcript edges and editorial copy are proposed here. Source meaning is preserved; flagged trims, medical language and before/after language still require final source/compliance verification.</p></section>
-    <div className="laneTabs">{lanes.map((value)=><button className={lane===value?'active':''} key={value} onClick={()=>setLane(value)}>{value==='all'?'TOP 8':laneLabel(value)}</button>)}</div>
+  {tab==='TODAY'&&<section className="briefStrip"><div><span className="tiny">SYSTEM READ</span><b>{recommended.length?`${recommended.length} things worth making first.`:'Recommended batch approved.'}</b></div><p>Everything else is optional. Technical worker data is hidden unless you ask for it.</p></section>}
 
-    <section className="results">{visible.map((item,index)=><article className="resultCard" key={item.id}>
-      <div className="rank">{String(index+1).padStart(2,'0')}</div>
-      <div className="resultMain">
-        <div className="metaRow"><span>{laneLabel(item.lane)}</span><span>{item.tier} TIER · {Math.round(item.score*100)}</span><span>{item.file} · {stamp(item.start)}–{stamp(item.end)}</span></div>
-        <h3>{item.hook}</h3>
-        <p className="why">“{item.transcript}”</p>
-        <div className="copyBlock"><span className="tiny">COVER</span><p>{item.cover}</p></div>
-        <div className="copyBlock"><span className="tiny">EDITORIAL CAPTION</span><p>{item.caption} <strong>{item.cta}</strong></p></div>
-        {item.reviewFlags.length>0 && <div className="copyBlock"><span className="tiny">FINAL CHECK</span><p>{item.reviewFlags.join(' · ')}</p></div>}
-      </div>
-      <aside className="resultSide"><span className={`pill pill-${item.reviewState==='READY'?'ready':'review'}`}>{item.reviewState==='READY'?'Approved':'Needs your taste'}</span><button onClick={()=>setState(item.id,'READY')}>{item.reviewState==='READY'?'APPROVED':'APPROVE'}</button><button className="quiet" onClick={()=>setState(item.id,'SKIP')}>SKIP</button></aside>
-    </article>)}</section>
+  <section className="makeGrid">{today.map((item,index)=><article className={`makeCard ${item.recommended?'recommended':''}`} key={item.id}>
+   <div className="poster"><span className="posterNo">{String(index+1).padStart(2,'0')}</span><span className="posterKicker">{item.topic.replaceAll('_',' ')}</span><strong>{item.cover}</strong><span className="posterSource">{stamp(item.start)}–{stamp(item.end)}</span></div>
+   <div className="makeBody"><div className="cardTop"><span className="tiny">{item.recommended?'MAKE FIRST':'OPTIONAL'}</span><div className="signals"><span className="creativeSignal">CREATIVE · READY</span><span className={item.compliance==='CLEAR'?'clearSignal':'checkSignal'}>COMPLIANCE · {item.compliance}</span></div></div>
+    <h2>{item.hook}</h2><p className="rationale">{item.rationale}</p>
+    <div className="outputs">{item.outputs.map(x=><span key={x}>{x}</span>)}</div>
+    <div className="proposed"><span className="tiny">PROPOSED CAPTION</span><p>{item.caption}</p><b>{item.cta}</b></div>
+    {expanded===item.id&&<div className="sourceDetails"><span className="tiny">SOURCE DETAILS</span><p>“{item.transcript}”</p><p>{item.file} · {stamp(item.start)}–{stamp(item.end)} · worker {item.tier}-tier {Math.round(item.score*100)}</p>{item.reviewFlags.length>0&&<p>Checks: {item.reviewFlags.join(' · ')}</p>}</div>}
+    <div className="decisionRow"><button onClick={()=>approve(item.id)}>{tab==='TODAY'?'MAKE IT':'MOVE FORWARD'}</button><button className="quiet" onClick={()=>setExpanded(expanded===item.id?null:item.id)}>{expanded===item.id?'CLOSE':'CHANGE / SOURCE'}</button>{tab==='TODAY'&&<button className="quiet" onClick={()=>pass(item.id)}>PASS</button>}</div>
+   </div>
+  </article>)}</section>
 
-    <section className="bottomRail"><div><span className="tiny">EDITORIAL REDUCTION</span><p>148 worker candidates → 29 channel packages → 8 distinct directions worth reviewing.</p></div><div><span className="tiny">YOUR JOB</span><p>{approved ? `${approved} approved. ` : ''}Approve or skip. The system keeps source verification and compliance-sensitive language gated before export.</p></div></section>
-  </main>;
+  {!today.length&&<section className="emptyState"><p className="eyebrow">{tab}</p><h2>{tab==='TODAY'?'Decision inbox cleared.':'Nothing here yet.'}</h2><p>{tab==='TODAY'?'The approved ideas have moved into Production.':'Approve something from Today and it will move here.'}</p></section>}
+
+  <footer className="cockpitFoot"><span>148 WORKER CANDIDATES → 8 EDITORIAL PICKS → 4 RECOMMENDED</span><span>NO AUTO-PUBLISH · HUMAN/COMPLIANCE GATE PRESERVED</span></footer>
+ </main>;
 }
