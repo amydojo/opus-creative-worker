@@ -3,6 +3,7 @@ import { cloudV2Packages } from '@/lib/cloud-v2-packages';
 import { isCanonicalTemplateId } from '@/lib/production';
 import {
   buildProductionPack,
+  type ContentFormat,
   type CreativeJob,
   type SourceLane,
 } from '@/lib/production-packer';
@@ -18,16 +19,29 @@ const sourceLanes = new Set<SourceLane>([
   'Local',
   'Conversion',
 ]);
+const formats = new Set<ContentFormat>([
+  'Reel',
+  'Story',
+  'Carousel',
+  'Still',
+  'Short',
+  'Long-form',
+  'Before / After',
+  'Ad Creative',
+  'Other',
+]);
 
 type RequestBody = {
   contentId?: string;
   campaignOrWeek?: string;
   job?: CreativeJob;
   sourceLane?: SourceLane;
+  format?: ContentFormat;
   slug?: string;
   primaryTemplateId?: unknown;
   channels?: string[];
   approval?: string;
+  paidUseRights?: string;
   date?: string;
   fields?: {
     series?: string;
@@ -55,6 +69,9 @@ export async function POST(request: Request) {
   if (!body.sourceLane || !sourceLanes.has(body.sourceLane)) {
     return NextResponse.json({ error: 'Existing Content Pipeline Source Lane is required.' }, { status: 400 });
   }
+  if (!body.format || !formats.has(body.format)) {
+    return NextResponse.json({ error: 'Existing Content Pipeline Format is required.' }, { status: 400 });
+  }
   if (!isCanonicalTemplateId(body.primaryTemplateId)) {
     return NextResponse.json({ error: 'Valid canonical Template ID is required.' }, { status: 400 });
   }
@@ -64,10 +81,12 @@ export async function POST(request: Request) {
     campaignOrWeek: body.campaignOrWeek?.trim() || 'W3',
     job: body.job,
     sourceLane: body.sourceLane,
+    format: body.format,
     slug: body.slug?.trim() || item.topic,
     primaryTemplateId: body.primaryTemplateId,
     channels: body.channels ?? [],
     approval: body.approval?.trim() || 'Needs approval',
+    paidUseRights: body.paidUseRights?.trim() || 'Unknown',
     date: body.date?.trim() || new Date().toISOString().slice(0, 10).replaceAll('-', ''),
     fields: {
       series: body.fields?.series,
@@ -86,16 +105,19 @@ export async function POST(request: Request) {
     strategy: {
       job: body.job,
       sourceLane: body.sourceLane,
+      format: body.format,
       channels: body.channels ?? [],
       approval: body.approval ?? 'Needs approval',
+      paidUseRights: body.paidUseRights ?? 'Unknown',
       primaryTemplateId: body.primaryTemplateId,
     },
     pack,
     execution: {
       mode: 'CANVA_PLUGIN_BOUND',
-      reason: 'Canva Connect Autofill is plan-gated in the current workspace. The production contract is still deterministic; execute via authored-master copy + bounded edit operations.',
-      folder: `OPUS · PRODUCTION / ${new Date().toISOString().slice(0, 7)} / Ask Dr. Frew`,
+      reason: 'Canva Connect Autofill is plan-gated in the current workspace. The production contract is deterministic; execute via authored-master copy + bounded edit operations.',
+      folder: `OPUS · PRODUCTION / ${new Date().toISOString().slice(0, 7)}`,
       publish: false,
+      gates: ['approval', 'paid-use rights', 'clinical/compliance', 'manual publish'],
     },
   });
 }
