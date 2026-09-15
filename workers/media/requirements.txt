@@ -1,0 +1,2 @@
+# OPUS OS media worker V0.2 deliberately keeps Python dependencies minimal.
+# ffmpeg + ffprobe are system dependencies.
