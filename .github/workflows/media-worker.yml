@@ -1,0 +1,48 @@
+name: OPUS media worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Stable request id
+        required: true
+        type: string
+      input_path:
+        description: Repo-relative media path or fixture path
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: opus-media-worker-${{ inputs.request_id }}
+  cancel-in-progress: false
+
+jobs:
+  media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Validate request id
+        shell: bash
+        run: |
+          safe="$(printf '%s' '${{ inputs.request_id }}' | tr -cd 'A-Za-z0-9._-')"
+          test -n "$safe" && test "$safe" = '${{ inputs.request_id }}'
+      - name: Run worker
+        run: |
+          python workers/media/worker.py '${{ inputs.input_path }}' --out worker-output --contact-sheets
+      - name: Upload manifest and previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: opus-media-${{ inputs.request_id }}
+          path: worker-output
+          if-no-files-found: error

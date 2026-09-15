@@ -1,56 +1,156 @@
-# OPUS Creative Worker
+# OPUS Creative Worker / OPUS OS
 
-OPUS Creative Worker is the production layer for Opus Plastic Surgery marketing: a small creative OS that turns approved source material into channel-ready social, ad, YouTube, story, and patient-education assets with as little repetitive manual work as possible.
+OPUS Creative Worker is the production layer for Opus Plastic Surgery marketing: a small creative OS that turns approved source material into channel-ready social, ad, YouTube, Story, Google Business, and patient-education assets with as little repetitive manual work as possible.
 
 ## Core rule
 
 **The computer owns repetition. Human review owns taste, patient privacy, medical claims, and paid spend.**
 
-This repo is intentionally designed so automation handles the boring parts — content routing, structured copy, Canva population, derivatives, QA, review state, and output packaging — while consequential decisions stay behind approval gates.
+Automation handles routing, media prep, layout selection, bounded copy/media replacement, derivatives, QA, review state, and packaging. Consequential decisions stay behind approval gates.
+
+## Authority
+
+1. Notion Growth Canon — strategy and jobs
+2. Notion Content Pipeline — execution truth and learning
+3. Canonical OPUS Figma system — creative system and master composition
+4. Canva — downstream production renderer
+5. OPUS OS — orchestration, QA, routing, and packaging
+
+No Canva database. No parallel calendar. No duplicate approval tracker. No new strategy taxonomy.
+
+## System shape
+
+`SOURCE → PYTHON MEDIA WORKER → CONTENT UNIT → CANONICAL TEMPLATE ID → CANVA RENDER CONTRACT → QA → CHANNEL ADAPTERS → REVIEW → PRODUCTION PACK → READY`
+
+### GitHub — brain
+Versioned schemas, routing, master registry, pack profiles, QA rules, tests, channel adapters, and the Python media worker live here.
+
+### Vercel — orchestrator
+Next.js is the control plane. It owns job state, template routing, copy-capacity QA, approval/rights gates, production-pack planning, and the Canva execution seam.
+
+### Python media worker — heavy media lane
+Python owns deterministic media processing: probing, contact sheets, proxy/frame generation, later ASR, scene/silence segmentation, matched before/after crops, and upload manifests.
+
+### Canva — production bay
+Figma remains the forge for inventing visual systems. Canva receives only proven patterns worth reproducing. OPUS OS selects layouts; it does not generate layouts from a blank canvas.
+
+## Canva render contracts
+
+### Six V1 gold masters
+
+Stable analytics/routing IDs:
+
+- `OPUS-TPL-FIELD-9X16-Q-V01`
+- `OPUS-TPL-PORTRAIT-9X16-E-V01`
+- `OPUS-TPL-SIGNAL-9X16-Q-V01`
+- `OPUS-TPL-COLUMN-4X5-E-V01`
+- `OPUS-TPL-EVIDENCE-4X5-I-V01`
+- `OPUS-TPL-FIELD-4X5-Q-V01`
+
+These remain the canonical reusable visual instruments.
+
+### Channel masters
+
+Two platform behaviors are sufficiently different to justify dedicated masters:
+
+- `OPUS-TPL-LOCAL-4X3-Q-V01` — Google Business Profile / local factual update · 1200×900
+- `OPUS-TPL-THUMB-16X9-E-V01` — long-form YouTube thumbnail · 1280×720
+
+They are **channel masters, not new strategy families**. TikTok, Facebook, YouTube Shorts and Meta paid reuse the existing gold masters through adapters.
+
+The canonical Template ID stays stable even if the implementation pointer to a Canva design changes after an intentional Figma → Canva promotion.
+
+## Production Packer V2
+
+The first pressure-tested content profile remains:
+
+`TRUST + Frew + PORTRAIT 9:16 → Ask Dr. Frew pack`
+
+It produces three bounded production roles:
+
+1. **COVER** — PORTRAIT · 9:16 · Editorial
+2. **STORY_TEASER** — SIGNAL · 9:16 · Quiet
+3. **FEED_DERIVATIVE** — COLUMN · 4:5 · Editorial
+
+The feed derivative is not a resized cover. It is a separate authored spatial system using the same strategy record and source idea.
+
+`POST /api/package` now also accepts `Format`, `Channel`, `Approval`, and `Paid-use rights` so it can emit only the useful channel surfaces and adapters while preserving the existing Content Pipeline gates.
+
+### Channel adapter matrix
+
+Adapters do not create duplicate Canva template families:
+
+- **TikTok 9:16** → PORTRAIT · first-frame hook, TikTok UI-safe zones, no Instagram-specific CTA
+- **Facebook Reels 9:16** → PORTRAIT · same visual contract, channel nuance in native post copy
+- **Facebook Feed 4:5** → COLUMN · editorial feed derivative, never a crop of the vertical cover
+- **YouTube Shorts 9:16** → PORTRAIT · silent-safe clarity; title/description stay native to YouTube
+- **Meta Paid 9:16** → SIGNAL · silent-safe, message-match, compliance metadata when required
+- **Meta Paid 4:5** → COLUMN · explicit conversion clarity while preserving the original creative job
+
+Meta paid adapters fail closed until both Content Pipeline approval and paid-use rights are cleared.
+
+### Dedicated channel outputs
+
+- **Google Business Profile 4:3** uses `LOCAL-4X3-Q` only for factual/local-appropriate Source Lanes.
+- **YouTube 16:9 thumbnail** uses `THUMB-16X9-E` only for `Long-form` content. Shorts continue to reuse the vertical master.
+
+## Measured copy QA
+
+Real production pressure tests taught the system layout capacity:
+
+- PORTRAIT 9:16 fails closed when display/support copy exceeds measured master capacity.
+- COLUMN 4:5 checks both total copy capacity and longest display line, because a short single-line headline can still expand into the media column.
+- LOCAL 4:3 and THUMB 16:9 have bounded headline/metadata capacities from their authored channel masters.
+- QA returns `COPY_REVIEW` / `COPY_CAPACITY_EXCEEDED`; automation must shorten, reroute, or insert an authored line break. It must **never shrink typography until copy fits**.
+
+## Canva execution reality
+
+Canva Connect Autofill is Enterprise-gated in the current workspace. OPUS OS therefore does not pretend remote autofill succeeded.
+
+Current working path:
+
+`select canonical master → copy authored master → bounded Canva edit operations → preview → explicit save approval → file production instance`
+
+The API exposes this honestly as a plugin-bound execution seam. If the Canva plan later unlocks Connect Autofill, the semantic contract is already in place.
+
+## Canva file architecture
+
+- `OPUS · BRAND SYSTEM`
+- `OPUS · MASTER RACK`
+  - `01 · VERTICAL · 9×16`
+  - `02 · FEED · 4×5`
+  - `03 · LOCAL · 4×3`
+  - `04 · LONG FORM · 16×9`
+- `OPUS · CAMPAIGN KITS`
+- `OPUS · PRODUCTION / YYYY-MM / series-or-campaign`
+- `OPUS · ARCHIVE`
+
+Campaign kits contain references or campaign-ready copies, never new design-system authority. Production contains real instances, never canonical masters.
+
+## Creative Desk V0.6
+
+- `MAKE IT` creates the primary production job.
+- `PACKAGE IT` returns authored Canva surfaces plus channel adapters.
+- The pack view exposes each unique render role, Template ID, QA state, channel adapter, surface, and gate state.
+- No auto-publishing.
+- Approval, paid-use rights, clinical/compliance, and spend gates remain intact.
+
+The UI expands reusable contracts only after they are deliberately authored or proven; it does not assume every content item deserves the same derivative bundle.
 
 ## Golden path
 
-`SOURCE → CONTENT UNIT → CANVA MASTER → QA → REVIEW → DERIVATIVES → READY`
-
-For a typical shoot, the target flow is:
-
-1. Ingest a clip, transcript, approved photo set, or campaign brief.
-2. Convert it into structured content units such as Reel, carousel, Story, YouTube, or paid-ad candidates.
-3. Select an approved Opus Canva master and populate controlled fields instead of redesigning from scratch.
-4. Run copy/compliance and visual QA.
-5. Pause when human approval is required.
-6. Apply reviewer feedback where safe and supported.
-7. Create channel-specific derivatives and a final publishing manifest.
-
-## System boundaries
-
-### GitHub — brain
-Versioned schemas, prompts, canon, workflow logic, QA rules, tests, and integration code live here.
-
-### Vercel — orchestrator
-The app and durable worker run on Vercel. Long-running production jobs should be resumable and step-based so Canva/API failures or approval delays do not destroy progress.
-
-### Canva — production bay
-Figma can remain the place where a new visual language is invented. Once a master is approved, Canva becomes the high-volume factory for population, image replacement, review, resizing, localization, and derivative creation.
-
-## V0 scope
-
-The first useful release should make one workflow excellent before expanding:
-
-**Thursday shoot clip → structured brief/copy → approved Canva master → visual/compliance QA → review gate → IG + Story derivatives**
-
-Initial worker lanes:
-
-- **Intake** — source registration and metadata
-- **Content** — structured angle, hook, body, CTA, channel classification
-- **Canva Compiler** — approved-master selection and field population
-- **Quality Gate** — visual, copy, brand, privacy, and compliance checks
-- **Review Gate** — human-in-the-loop approval and reviewer feedback
-- **Output** — channel derivatives plus publishing manifest
+1. Register footage, photos, transcript, or campaign brief.
+2. Run deterministic media prep in Python.
+3. Resolve the existing Notion strategy record.
+4. Select the canonical Template ID.
+5. Populate a copied Canva render contract with bounded content.
+6. Run copy/layout/compliance QA.
+7. Apply channel adapters instead of creating duplicate template families.
+8. Pause when approval or rights are required.
+9. File production instances in Canva and return links to the existing Notion record.
+10. Publish only after the existing approval workflow clears the asset.
 
 ## Safety / approval policy
-
-Automatic publishing is out of scope for V0.
 
 Always require explicit human approval for:
 
@@ -59,29 +159,20 @@ Always require explicit human approval for:
 - medical claims, outcomes, guarantees, comparative claims, or risk-sensitive wording
 - anything marked by QA as ambiguous or non-compliant
 
-Organic low-risk derivatives may eventually move automatically after their source master and copy are already approved.
+A production pack never changes `Approval`, `Paid-use rights`, or publishing status on its own.
 
-## Suggested content contract
+## Next gates
 
-Every piece of content should resolve to a structured record with fields such as:
+1. Consume current Notion execution records directly in PACKAGE IT instead of duplicating strategy fields in the UI request.
+2. Add durable workflow pause/resume for Canva plugin-bound steps.
+3. Add ASR + clip scoring to the Python media worker.
+4. Add before/after pairing, matched crop solving, and READY_UPLOAD manifests.
+5. Promote another content-specific pack profile only after repeated production friction proves the need.
 
-- source ID
-- content type / channel
-- angle
-- hook
-- body / caption
-- CTA
-- Canva master ID
-- asset references
-- compliance flags
-- review status
-- derivative status
-- publish status
+## Operating principle
 
-This makes the worker deterministic enough to debug instead of relying on an unconstrained agent to improvise an entire campaign.
+The goal is not another dashboard to babysit. The target interaction is closer to:
 
-## Development status
+> Package this approved source for the channels already on the Content Pipeline record.
 
-**V0 bootstrap — active.**
-
-Repository initialized 2026-09-15. Next milestone: land the application scaffold, connect the repo to a dedicated Vercel project, and verify the first intake → QA route in a preview deployment.
+OPUS OS should do the repetitive work, then surface only the decisions that actually require a person.
