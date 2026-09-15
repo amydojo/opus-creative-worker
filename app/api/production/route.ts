@@ -22,7 +22,28 @@ type AutofillJob = {
   error?: { message?: string };
 };
 
+type SemanticTextKey = 'SERIES' | 'EYEBROW' | 'HOOK' | 'HEADLINE' | 'SUPPORT' | 'PROOF' | 'CTA' | 'META' | 'LEGAL' | 'PHYSICIAN' | 'CAMPAIGN_ID';
+type SemanticMediaKey = 'IMAGE_HERO' | 'IMAGE_SECONDARY' | 'IMAGE_DETAIL' | 'IMAGE_BEFORE' | 'IMAGE_AFTER';
+
+type ProductionRequest = {
+  contentId?: string;
+  templateId?: unknown;
+  title?: string;
+  fields?: Partial<Record<SemanticTextKey, string>>;
+  media?: {
+    field?: SemanticMediaKey;
+    type?: 'image' | 'video';
+    assetId?: string;
+  };
+};
+
 const CANVA_API = 'https://api.canva.com/rest/v1';
+const semanticTextKeys = new Set<SemanticTextKey>([
+  'SERIES', 'EYEBROW', 'HOOK', 'HEADLINE', 'SUPPORT', 'PROOF', 'CTA', 'META', 'LEGAL', 'PHYSICIAN', 'CAMPAIGN_ID',
+]);
+const semanticMediaKeys = new Set<SemanticMediaKey>([
+  'IMAGE_HERO', 'IMAGE_SECONDARY', 'IMAGE_DETAIL', 'IMAGE_BEFORE', 'IMAGE_AFTER',
+]);
 
 function canvaHeaders(token: string) {
   return {
@@ -63,8 +84,8 @@ async function pollAutofill(token: string, jobId: string): Promise<AutofillJob> 
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { contentId } = body as { contentId?: string; templateId?: unknown };
+  const body = (await request.json()) as ProductionRequest;
+  const { contentId } = body;
   const item = cloudV2Packages.find((candidate) => candidate.id === contentId);
 
   if (!item) {
@@ -96,6 +117,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const requestedFields: Partial<Record<SemanticTextKey, string>> = {};
+  for (const [key, value] of Object.entries(body.fields ?? {})) {
+    if (semanticTextKeys.has(key as SemanticTextKey) && typeof value === 'string') {
+      requestedFields[key as SemanticTextKey] = value;
+    }
+  }
+
+  // The Content Pipeline is execution truth. Callers may pass the current
+  // approved/pending-review semantic copy from Notion to override older worker
+  // package text without inventing a second taxonomy.
+  const semanticFields = { ...compiled.fields, ...requestedFields };
+  const title = body.title?.trim() || compiled.title;
+
   const id = `job_${contentId}_${Date.now()}`;
   const token = process.env.CANVA_ACCESS_TOKEN;
 
@@ -106,7 +140,7 @@ export async function POST(request: Request) {
       state: 'CANVA_PENDING',
       templateId: compiled.templateId,
       canvaSourceDesignId: compiled.canvaSourceDesignId,
-      compiled,
+      compiled: { ...compiled, title, fields: semanticFields },
       needsConnection: true,
     });
   }
@@ -115,12 +149,26 @@ export async function POST(request: Request) {
     // Fail closed if the selected authored master has not yet had its semantic
     // Canva Data fields promoted. A blank copy is not a valid production render.
     const dataset = await readDesignDataset(token, compiled.canvaSourceDesignId);
-    const autofillData: Record<string, { type: 'text'; text: string }> = {};
+    const autofillData: Record<
+      string,
+      { type: 'text'; text: string } | { type: 'image' | 'video'; asset_id: string }
+    > = {};
 
-    for (const [key, value] of Object.entries(compiled.fields)) {
+    for (const [key, value] of Object.entries(semanticFields)) {
       if (dataset[key]?.type === 'text' && typeof value === 'string' && value.trim()) {
         autofillData[key] = { type: 'text', text: value };
       }
+    }
+
+    const media = body.media;
+    if (
+      media?.field &&
+      semanticMediaKeys.has(media.field) &&
+      media.assetId &&
+      media.type &&
+      dataset[media.field]?.type === media.type
+    ) {
+      autofillData[media.field] = { type: media.type, asset_id: media.assetId };
     }
 
     if (Object.keys(autofillData).length === 0) {
@@ -131,7 +179,7 @@ export async function POST(request: Request) {
           state: 'BLOCKED',
           templateId: compiled.templateId,
           canvaSourceDesignId: compiled.canvaSourceDesignId,
-          compiled,
+          compiled: { ...compiled, title, fields: semanticFields },
           error: 'Selected Canva master has no committed matching semantic autofill fields.',
         },
         { status: 409 },
@@ -146,14 +194,37 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         type: 'create_from_design',
         design_id: compiled.canvaSourceDesignId,
-        title: compiled.title,
+        title,
         data: autofillData,
       }),
       cache: 'no-store',
     });
     const createData = await createResponse.json();
     if (!createResponse.ok) {
-      throw new Error(createData?.message || `Canva autofill ${createResponse.status}`);
+      const message = createData?.message || `Canva autofill ${createResponse.status}`;
+      const enterpriseBlocked = createResponse.status === 403 || /enterprise/i.test(message);
+
+      if (enterpriseBlocked) {
+        // Canva Connect Autofill can be plan-gated. Return a production packet
+        // instead of pretending the renderer worked. The ChatGPT Canva edit
+        // path can still copy the authored master and apply bounded edits.
+        return NextResponse.json(
+          {
+            id,
+            contentId,
+            state: 'CANVA_PLUGIN_REQUIRED',
+            templateId: compiled.templateId,
+            canvaSourceDesignId: compiled.canvaSourceDesignId,
+            compiled: { ...compiled, title, fields: semanticFields },
+            media: media ?? null,
+            error: message,
+            fallback: 'COPY_AUTHORED_MASTER_AND_APPLY_BOUNDED_EDITS',
+          },
+          { status: 409 },
+        );
+      }
+
+      throw new Error(message);
     }
 
     const autofillJobId = createData?.job?.id as string | undefined;
@@ -173,7 +244,7 @@ export async function POST(request: Request) {
           templateId: compiled.templateId,
           canvaSourceDesignId: compiled.canvaSourceDesignId,
           canvaAutofillJobId: autofillJobId,
-          compiled,
+          compiled: { ...compiled, title, fields: semanticFields },
         },
         { status: 202 },
       );
@@ -188,7 +259,7 @@ export async function POST(request: Request) {
       canvaAutofillJobId: autofillJobId,
       canvaDesignId: job.result?.design?.id,
       canvaUrl: job.result?.design?.urls?.edit_url,
-      compiled,
+      compiled: { ...compiled, title, fields: semanticFields },
     });
   } catch (error) {
     return NextResponse.json(
@@ -198,7 +269,7 @@ export async function POST(request: Request) {
         state: 'BLOCKED',
         templateId: compiled.templateId,
         canvaSourceDesignId: compiled.canvaSourceDesignId,
-        compiled,
+        compiled: { ...compiled, title, fields: semanticFields },
         error: error instanceof Error ? error.message : 'Canva compilation failed',
       },
       { status: 502 },
