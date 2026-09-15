@@ -45,11 +45,37 @@ const semanticMediaKeys = new Set<SemanticMediaKey>([
   'IMAGE_HERO', 'IMAGE_SECONDARY', 'IMAGE_DETAIL', 'IMAGE_BEFORE', 'IMAGE_AFTER',
 ]);
 
+// Measured against the authored V1 gold master during the first real pressure
+// test. These are fail-closed copy capacities, not auto-resize rules.
+const copyCaps: Partial<Record<CanonicalTemplateId, Partial<Record<SemanticTextKey, number>>>> = {
+  'OPUS-TPL-PORTRAIT-9X16-E-V01': {
+    SERIES: 24,
+    HEADLINE: 18,
+    SUPPORT: 95,
+    META: 44,
+    PHYSICIAN: 44,
+  },
+};
+
 function canvaHeaders(token: string) {
   return {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   };
+}
+
+function getCopyCapacityViolations(
+  templateId: CanonicalTemplateId,
+  fields: Partial<Record<SemanticTextKey, string>>,
+) {
+  const caps = copyCaps[templateId];
+  if (!caps) return [];
+
+  return Object.entries(caps).flatMap(([key, max]) => {
+    const value = fields[key as SemanticTextKey];
+    if (!value || typeof max !== 'number' || value.length <= max) return [];
+    return [{ field: key, maxChars: max, actualChars: value.length }];
+  });
 }
 
 async function readDesignDataset(token: string, designId: string) {
@@ -129,8 +155,26 @@ export async function POST(request: Request) {
   // package text without inventing a second taxonomy.
   const semanticFields = { ...compiled.fields, ...requestedFields };
   const title = body.title?.trim() || compiled.title;
-
   const id = `job_${contentId}_${Date.now()}`;
+
+  const capacityViolations = getCopyCapacityViolations(compiled.templateId, semanticFields);
+  if (capacityViolations.length > 0) {
+    return NextResponse.json(
+      {
+        id,
+        contentId,
+        state: 'QA_FAILED',
+        failure: 'COPY_CAPACITY_EXCEEDED',
+        templateId: compiled.templateId,
+        canvaSourceDesignId: compiled.canvaSourceDesignId,
+        violations: capacityViolations,
+        compiled: { ...compiled, title, fields: semanticFields },
+        error: 'Copy exceeds the authored master capacity. Shorten or reroute the copy; do not shrink typography to force a fit.',
+      },
+      { status: 422 },
+    );
+  }
+
   const token = process.env.CANVA_ACCESS_TOKEN;
 
   if (!token) {
