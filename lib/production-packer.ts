@@ -64,10 +64,19 @@ const caps: Partial<Record<CanonicalTemplateId, Record<string, number>>> = {
   },
   'OPUS-TPL-COLUMN-4X5-E-V01': {
     EYEBROW: 28,
-    HEADLINE: 64,
+    HEADLINE: 24,
     SUPPORT: 220,
     CTA: 36,
     META: 54,
+  },
+};
+
+// The COLUMN pressure test proved total character count alone is insufficient:
+// a 14-character single-line display expanded into the media column, while the
+// same words split deliberately across lines stayed inside the editorial field.
+const lineCaps: Partial<Record<CanonicalTemplateId, Record<string, number>>> = {
+  'OPUS-TPL-COLUMN-4X5-E-V01': {
+    HEADLINE: 9,
   },
 };
 
@@ -89,13 +98,27 @@ function compact(value: string | undefined) {
 
 function checkCopy(templateId: CanonicalTemplateId, fields: Record<string, string>) {
   const templateCaps = caps[templateId];
-  if (!templateCaps) return { status: 'READY_FOR_CANVA' as const, reasons: [] as string[] };
-  const reasons = Object.entries(templateCaps).flatMap(([field, max]) => {
-    const value = fields[field];
-    return value && value.length > max
-      ? [`${field} ${value.length}/${max} chars — shorten or reroute; never shrink typography to force fit.`]
-      : [];
-  });
+  const templateLineCaps = lineCaps[templateId];
+  if (!templateCaps && !templateLineCaps) {
+    return { status: 'READY_FOR_CANVA' as const, reasons: [] as string[] };
+  }
+
+  const reasons: string[] = [];
+  for (const [field, value] of Object.entries(fields)) {
+    const max = templateCaps?.[field];
+    if (value && typeof max === 'number' && value.length > max) {
+      reasons.push(`${field} ${value.length}/${max} chars — shorten or reroute; never shrink typography to force fit.`);
+    }
+
+    const maxLine = templateLineCaps?.[field];
+    if (value && typeof maxLine === 'number') {
+      const longestLine = Math.max(...value.split('\n').map((line) => line.length));
+      if (longestLine > maxLine) {
+        reasons.push(`${field} longest line ${longestLine}/${maxLine} chars — add an authored line break or shorten copy to protect the media column.`);
+      }
+    }
+  }
+
   return {
     status: reasons.length ? ('COPY_REVIEW' as const) : ('READY_FOR_CANVA' as const),
     reasons,
@@ -132,9 +155,11 @@ export function buildProductionPack(req: PackRequest): ProductionPack {
     };
   }
 
+  const safeHeadline = compact(req.fields.headline || req.fields.hook);
+
   const coverFields: Record<string, string> = {
     SERIES: compact(req.fields.series || 'ASK DR. FREW'),
-    HEADLINE: compact(req.fields.headline || req.fields.hook),
+    HEADLINE: safeHeadline,
     SUPPORT: compact(req.fields.support || req.fields.hook),
     META: compact(req.fields.meta),
     PHYSICIAN: compact(req.fields.physician || 'DR. TYLER FREW · PLASTIC SURGEON'),
@@ -142,14 +167,14 @@ export function buildProductionPack(req: PackRequest): ProductionPack {
 
   const storyFields: Record<string, string> = {
     SERIES: compact(req.fields.series || 'ASK DR. FREW'),
-    HEADLINE: compact(req.fields.headline || req.fields.hook),
+    HEADLINE: safeHeadline,
     SUPPORT: compact(req.fields.hook),
     CTA: compact(req.fields.cta || 'WATCH THE ANSWER'),
   };
 
   const feedFields: Record<string, string> = {
     EYEBROW: compact(req.fields.series || 'ASK DR. FREW'),
-    HEADLINE: compact(req.fields.hook || req.fields.headline),
+    HEADLINE: safeHeadline,
     SUPPORT: compact(req.fields.support || req.fields.proof),
     CTA: compact(req.fields.cta),
     META: compact(req.fields.meta || req.fields.physician),
