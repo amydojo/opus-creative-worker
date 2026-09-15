@@ -45,8 +45,8 @@ const semanticMediaKeys = new Set<SemanticMediaKey>([
   'IMAGE_HERO', 'IMAGE_SECONDARY', 'IMAGE_DETAIL', 'IMAGE_BEFORE', 'IMAGE_AFTER',
 ]);
 
-// Measured against the authored V1 gold master during the first real pressure
-// test. These are fail-closed copy capacities, not auto-resize rules.
+// Measured / authored capacity gates. These fail closed; they never shrink
+// typography to force oversized copy into a render contract.
 const copyCaps: Partial<Record<CanonicalTemplateId, Partial<Record<SemanticTextKey, number>>>> = {
   'OPUS-TPL-PORTRAIT-9X16-E-V01': {
     SERIES: 24,
@@ -54,6 +54,17 @@ const copyCaps: Partial<Record<CanonicalTemplateId, Partial<Record<SemanticTextK
     SUPPORT: 95,
     META: 44,
     PHYSICIAN: 44,
+  },
+  'OPUS-TPL-LOCAL-4X3-Q-V01': {
+    EYEBROW: 24,
+    HEADLINE: 42,
+    META: 40,
+  },
+  'OPUS-TPL-THUMB-16X9-E-V01': {
+    SERIES: 22,
+    HEADLINE: 24,
+    PHYSICIAN: 28,
+    META: 32,
   },
 };
 
@@ -150,9 +161,6 @@ export async function POST(request: Request) {
     }
   }
 
-  // The Content Pipeline is execution truth. Callers may pass the current
-  // approved/pending-review semantic copy from Notion to override older worker
-  // package text without inventing a second taxonomy.
   const semanticFields = { ...compiled.fields, ...requestedFields };
   const title = body.title?.trim() || compiled.title;
   const id = `job_${contentId}_${Date.now()}`;
@@ -190,8 +198,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Fail closed if the selected authored master has not yet had its semantic
-    // Canva Data fields promoted. A blank copy is not a valid production render.
     const dataset = await readDesignDataset(token, compiled.canvaSourceDesignId);
     const autofillData: Record<
       string,
@@ -230,8 +236,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Layout is selected, never generated. Canva creates a production instance
-    // from the tagged source design and replaces only bounded semantic fields.
     const createResponse = await fetch(`${CANVA_API}/autofills`, {
       method: 'POST',
       headers: canvaHeaders(token),
@@ -249,9 +253,6 @@ export async function POST(request: Request) {
       const enterpriseBlocked = createResponse.status === 403 || /enterprise/i.test(message);
 
       if (enterpriseBlocked) {
-        // Canva Connect Autofill can be plan-gated. Return a production packet
-        // instead of pretending the renderer worked. The ChatGPT Canva edit
-        // path can still copy the authored master and apply bounded edits.
         return NextResponse.json(
           {
             id,
