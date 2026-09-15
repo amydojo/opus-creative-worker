@@ -8,17 +8,12 @@ export async function POST(request:Request){
  if(!item) return NextResponse.json({error:'Unknown content item'},{status:404});
  const compiled=compileCanvaPayload(item);
  const id=`job_${contentId}_${Date.now()}`;
-
- // Runtime Canva Connect seam. The ChatGPT Canva connector cannot be silently reused by a deployed app.
- // When CANVA_ACCESS_TOKEN is connected, this creates a copy of the canonical OPUS master.
  const token=process.env.CANVA_ACCESS_TOKEN;
- if(!token){
-   return NextResponse.json({id,contentId,state:'CANVA_PENDING',templateId:compiled.templateId,compiled,needsConnection:true});
- }
+ if(!token) return NextResponse.json({id,contentId,state:'CANVA_PENDING',templateId:compiled.templateId,compiled,needsConnection:true});
  try{
-   const response=await fetch(`https://api.canva.com/rest/v1/designs/${compiled.templateId}/copy`,{
+   const response=await fetch('https://api.canva.com/rest/v1/designs',{
      method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
-     body:JSON.stringify({title:compiled.title}),cache:'no-store'
+     body:JSON.stringify({type:'design',design_id:compiled.templateId,title:compiled.title}),cache:'no-store'
    });
    const data=await response.json();
    if(!response.ok) throw new Error(data?.message||`Canva ${response.status}`);
