@@ -1,0 +1,40 @@
+:root {
+  color-scheme: light;
+  --ink: #11110f;
+  --paper: #f3f0e8;
+  --line: #cfc9bc;
+  --muted: #6d695f;
+  --accent: #4659d6;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+body { font-family: Arial, Helvetica, sans-serif; }
+main { max-width: 1440px; margin: 0 auto; padding: 36px; }
+.hero { min-height: 46vh; display: flex; flex-direction: column; justify-content: flex-end; border-bottom: 1px solid var(--line); padding-bottom: 36px; }
+.eyebrow, .tiny, .mono, .statusRow { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.eyebrow { font-size: 12px; color: var(--muted); margin: 0 0 18px; }
+h1 { font-size: clamp(48px, 7vw, 110px); line-height: .92; letter-spacing: -.055em; max-width: 1100px; margin: 0; font-weight: 700; }
+.lede { font-size: clamp(18px, 2.1vw, 28px); line-height: 1.25; max-width: 840px; margin: 32px 0 24px; }
+.statusRow { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); }
+.statusDot { width: 8px; height: 8px; border-radius: 99px; background: var(--accent); display: inline-block; }
+.divider { opacity: .45; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); border-left: 1px solid var(--line); margin-top: 36px; }
+.card { min-height: 270px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.card:nth-child(-n+3) { border-top: 1px solid var(--line); }
+.cardTop { display: flex; justify-content: space-between; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: var(--muted); }
+.card h2 { font-size: 34px; letter-spacing: -.035em; margin: auto 0 14px; }
+.card p { color: var(--muted); line-height: 1.4; max-width: 33ch; margin: 0; }
+.tiny { font-size: 9px; }
+.rail { display: grid; grid-template-columns: 1.5fr 1fr; gap: 48px; padding: 40px 0 20px; }
+.rail p { line-height: 1.45; }
+.mono { font-size: 14px; }
+
+@media (max-width: 900px) {
+  main { padding: 20px; }
+  .hero { min-height: auto; padding-top: 90px; }
+  .grid { grid-template-columns: 1fr; }
+  .card:nth-child(n) { border-top: 0; }
+  .card:first-child { border-top: 1px solid var(--line); }
+  .rail { grid-template-columns: 1fr; gap: 18px; }
+}
