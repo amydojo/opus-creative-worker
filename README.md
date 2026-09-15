@@ -1,4 +1,4 @@
-# OPUS Creative Worker
+# OPUS Creative Worker / OPUS OS
 
 OPUS Creative Worker is the production layer for Opus Plastic Surgery marketing: a small creative OS that turns approved source material into channel-ready social, ad, YouTube, story, and patient-education assets with as little repetitive manual work as possible.
 
@@ -6,47 +6,48 @@ OPUS Creative Worker is the production layer for Opus Plastic Surgery marketing:
 
 **The computer owns repetition. Human review owns taste, patient privacy, medical claims, and paid spend.**
 
-This repo is intentionally designed so automation handles the boring parts — content routing, structured copy, Canva population, derivatives, QA, review state, and output packaging — while consequential decisions stay behind approval gates.
+Automation handles routing, media prep, structured copy, Canva population, derivatives, QA, review state, and packaging. Consequential decisions stay behind approval gates.
+
+## System shape
+
+`SOURCE → PYTHON MEDIA WORKER → CONTENT UNIT → CANVA MASTER → QA → REVIEW → DERIVATIVES → READY`
+
+### GitHub — brain
+Versioned schemas, prompts, canon, workflow logic, QA rules, tests, and the Python media worker live here.
+
+### Vercel — orchestrator
+Next.js is the control plane. It owns job state, routing, approval gates, API endpoints, Canva handoff, and eventually durable pause/resume workflow execution.
+
+### Python media worker — heavy media lane
+Python owns deterministic media processing: probing, contact sheets, proxy/frame generation, later ASR, scene/silence segmentation, matched before/after crops, and upload manifests.
+
+### Canva — production bay
+Figma remains the forge for inventing visual systems. Once a master is approved, Canva is the high-volume production surface for population, image replacement, review, resizing, localization, and derivative creation.
+
+## V0.2 now in the repo
+
+- Next.js production console shell
+- typed `CreativeJob` and `ContentUnit` contracts
+- risk-sensitive approval rules
+- `/api/pipeline` planner endpoint
+- `/api/demo-job` deterministic sample route
+- Python 3.12 media worker using FFmpeg/ffprobe
+- optional video contact-sheet generation
+- GitHub Actions remote media-worker workflow with stable request IDs
+- no auto-publishing and no paid-spend automation
 
 ## Golden path
 
-`SOURCE → CONTENT UNIT → CANVA MASTER → QA → REVIEW → DERIVATIVES → READY`
+For a typical shoot:
 
-For a typical shoot, the target flow is:
-
-1. Ingest a clip, transcript, approved photo set, or campaign brief.
-2. Convert it into structured content units such as Reel, carousel, Story, YouTube, or paid-ad candidates.
-3. Select an approved Opus Canva master and populate controlled fields instead of redesigning from scratch.
-4. Run copy/compliance and visual QA.
-5. Pause when human approval is required.
-6. Apply reviewer feedback where safe and supported.
-7. Create channel-specific derivatives and a final publishing manifest.
-
-## System boundaries
-
-### GitHub — brain
-Versioned schemas, prompts, canon, workflow logic, QA rules, tests, and integration code live here.
-
-### Vercel — orchestrator
-The app and durable worker run on Vercel. Long-running production jobs should be resumable and step-based so Canva/API failures or approval delays do not destroy progress.
-
-### Canva — production bay
-Figma can remain the place where a new visual language is invented. Once a master is approved, Canva becomes the high-volume factory for population, image replacement, review, resizing, localization, and derivative creation.
-
-## V0 scope
-
-The first useful release should make one workflow excellent before expanding:
-
-**Thursday shoot clip → structured brief/copy → approved Canva master → visual/compliance QA → review gate → IG + Story derivatives**
-
-Initial worker lanes:
-
-- **Intake** — source registration and metadata
-- **Content** — structured angle, hook, body, CTA, channel classification
-- **Canva Compiler** — approved-master selection and field population
-- **Quality Gate** — visual, copy, brand, privacy, and compliance checks
-- **Review Gate** — human-in-the-loop approval and reviewer feedback
-- **Output** — channel derivatives plus publishing manifest
+1. Register footage, photos, transcript, or campaign brief.
+2. Run deterministic media prep in Python.
+3. Convert source material into structured content units such as Reel, carousel, Story, YouTube, or paid-ad candidates.
+4. Select an approved Opus Canva master and populate controlled fields instead of redesigning from scratch.
+5. Run copy/compliance and visual QA.
+6. Pause only when human approval is required.
+7. Apply reviewer feedback where safe and supported.
+8. Create channel-specific derivatives and a final publishing manifest.
 
 ## Safety / approval policy
 
@@ -61,27 +62,19 @@ Always require explicit human approval for:
 
 Organic low-risk derivatives may eventually move automatically after their source master and copy are already approved.
 
-## Suggested content contract
+## Next gates
 
-Every piece of content should resolve to a structured record with fields such as:
+1. Verify preview build on Vercel.
+2. Promote the V0.2 control plane after build/runtime checks pass.
+3. Add durable workflow execution and human approval pause/resume.
+4. Connect Canva master registry and controlled autofill/derivative generation.
+5. Add ASR + clip scoring to the Python media worker.
+6. Add before/after pairing, matched crop solving, and READY_UPLOAD manifests.
 
-- source ID
-- content type / channel
-- angle
-- hook
-- body / caption
-- CTA
-- Canva master ID
-- asset references
-- compliance flags
-- review status
-- derivative status
-- publish status
+## Operating principle
 
-This makes the worker deterministic enough to debug instead of relying on an unconstrained agent to improvise an entire campaign.
+The goal is not another dashboard to babysit. The target interaction is closer to:
 
-## Development status
+> Process Thursday's shoot.
 
-**V0 bootstrap — active.**
-
-Repository initialized 2026-09-15. Next milestone: land the application scaffold, connect the repo to a dedicated Vercel project, and verify the first intake → QA route in a preview deployment.
+OPUS OS should do the repetitive work, then surface only the decisions that actually require a person.
