@@ -1,11 +1,20 @@
 import { z } from "zod";
 import { OpusDeliverableSchema } from "@/lib/ai/opus-package";
+import { getContentPipelineDataSourceId } from "@/lib/notion/client";
 import { saveDeliverableToNotion } from "@/lib/notion/save-deliverable";
 
 const SaveRequestSchema = z.object({
   deliverable: OpusDeliverableSchema,
   mode: z.enum(["draft", "review"]).default("draft"),
 });
+
+export async function GET() {
+  return Response.json({
+    notionConfigured: Boolean(process.env.NOTION_ACCESS_TOKEN),
+    dataSourceId: getContentPipelineDataSourceId(),
+    writesHumanGated: true,
+  });
+}
 
 export async function POST(request: Request) {
   try {
