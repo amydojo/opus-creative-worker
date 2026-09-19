@@ -1,0 +1,1 @@
+(async()=>{for(const src of ["/first-access-dashboard-1.js","/first-access-dashboard-2.js"]){await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}})().catch(console.error);
