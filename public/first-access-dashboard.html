@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<title>First Access V01 · Meta Ads</title>
+<link rel="stylesheet" href="/first-access-dashboard.css" />
+</head>
+<body>
+
+<div class="app">
+<header class="topbar">
+  <div class="brandline"><h1>First Access V01 · Meta Ads</h1><span class="edition">Reviewed measurement surface</span></div>
+  <div class="scope" aria-label="Dashboard scope"><span class="chip">Sep 11–15, 2026</span><span class="chip partial">Sep 15 partial</span><span class="chip">7-day click / 1-day view</span><span class="chip" id="syncChip">Loading governed snapshot…</span></div>
+</header>
+<div class="layout">
+<aside class="rail" aria-label="Dashboard navigation">
+  <div class="railLabel">Review path</div>
+  <nav>
+    <a href="#acquisition" class="active"><span class="n">01</span>Acquisition</a>
+    <a href="#trend"><span class="n">02</span>Trend</a>
+    <a href="#placement"><span class="n">03</span>Placement</a>
+    <a href="#activation"><span class="n">04</span>Activation gate</a>
+    <a href="#v02"><span class="n">05</span>V02 test frame</a>
+    <a href="#sources"><span class="n">06</span>Sources</a>
+  </nav>
+  <div class="railMeta">Snapshot: Sep 15<br>Observed through CRM delivery.<br>Reachability, intent and booking remain unmeasured.</div>
+</aside>
+<main>
+<section id="acquisition" class="section" data-component-id="acquisition-path">
+  <div class="sectionHead"><h2 class="sectionTitle"><span class="sectionNo">01</span>Acquisition path</h2><p class="sectionDesc">The complete observed path available in this snapshot, from spend through CRM delivery.</p></div>
+  <div class="card acquisitionBoard">
+    <div class="spine" id="spine"></div>
+    <div class="decisionStrip">
+      <div class="decisionCell"><div class="decisionKicker">Snapshot boundary</div><div class="decisionText">Acquisition is observed through Aesthetix delivery. Lead quality and booking value are not yet measured.</div></div>
+      <div class="decisionCell"><div class="metricLabel">CRM-delivered CPA</div><div class="metricValue" id="headlineCpa"></div><div class="metricFoot">Spend ÷ observed Aesthetix contacts</div></div>
+      <div class="decisionCell"><div class="metricLabel">Link CTR</div><div class="metricValue" id="headlineCtr"></div><div class="metricFoot">Meta diagnostic</div></div>
+      <div class="decisionCell"><div class="metricLabel">Frequency</div><div class="metricValue" id="headlineFreq"></div><div class="metricFoot">No saturation conclusion from this alone</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="trend" class="section" data-component-id="daily-performance">
+  <div class="sectionHead"><h2 class="sectionTitle"><span class="sectionNo">02</span>Daily performance</h2><p class="sectionDesc">Daily CPL and attributed lead count. Sep 15 is partial and can still backfill under the attribution window.</p></div>
+  <div class="trendGrid">
+    <div class="card chartCard">
+      <div class="cardHead"><div><h3>Daily CPL and attributed leads</h3><p>The line is cost per attributed lead. Bars show attributed lead count.</p></div><div class="legend"><span><i></i>CPL</span><span><i class="bar"></i>leads</span></div></div>
+      <div id="trendPlot" class="trendPlot"></div>
+      <div id="observedDelta" class="observedDelta"></div>
+    </div>
+    <div class="windowStack" id="windowStack"></div>
+  </div>
+  <div class="card benchmarkCard" id="benchmarkCard"></div>
+</section>
+
+<section id="placement" class="section" data-component-id="placement-yield">
+  <div class="sectionHead"><h2 class="sectionTitle"><span class="sectionNo">03</span>Placement yield</h2><p class="sectionDesc">Spend, clicks and attributed leads by placement. Click→lead is derived as attributed leads ÷ link clicks and is descriptive at this sample size.</p></div>
+  <div class="placementSummary" id="placementSummary"></div>
+  <div class="card placementCard">
+    <div class="toolbar">
+      <div class="controlGroup" aria-label="Placement filter"><button class="btn active" data-filter="all">All placements</button><button class="btn" data-filter="lead">With attributed lead</button><button class="btn" data-filter="zero">Zero attributed leads</button></div>
+      <div class="controlGroup" aria-label="Placement sort"><button class="btn active" data-sort="spend">Sort · spend</button><button class="btn" data-sort="yield">Sort · click→lead</button><button class="btn" data-sort="cpl">Sort · CPL</button><button class="btn soft" id="exportPlacement">Export CSV</button></div>
+    </div>
+    <div class="placementVisual" id="placementVisual" role="list"></div>
+    <details class="records"><summary><span>Reviewed placement records</span><span>Open table ＋</span></summary><div class="tableWrap"><table><thead><tr><th>Placement</th><th>Spend</th><th>Clicks</th><th>Leads</th><th>Click→lead</th><th>CPL</th><th>Link CTR</th></tr></thead><tbody id="placementTable"></tbody></table></div></details>
+    <div class="placementNote">Click a placement row to inspect exact reviewed metrics. The displayed placement rows sum to $171.30, which is $0.95 below reviewed overall spend; no balancing row has been invented.</div>
+  </div>
+</section>
+
+<section id="activation" class="section" data-component-id="crm-scale-gate">
+  <div class="sectionHead"><h2 class="sectionTitle"><span class="sectionNo">04</span>CRM and scale gate</h2><p class="sectionDesc">The CRM path is observed through contact creation. The scale gate shows requirements documented in the Sep 15 snapshot, not live completion status today.</p></div>
+  <div class="crmGrid">
+    <div>
+      <div class="card stageCard"><div class="cardHead"><div><h3>Observed journey state</h3><p>Observed stages are solid; unresolved stages remain visibly open.</p></div></div><div class="stageFlow" id="stageFlow"></div><div class="unknownStrip" id="unknownStrip"></div></div>
+      <div class="card gateCard"><div class="gateHead"><span>Required before meaningful scale</span><span>Sep 15 snapshot</span></div><div id="gateList"></div></div>
+    </div>
+    <div class="card scenarioCard">
+      <div class="scenarioKicker">Modeled reachability</div>
+      <div class="scenarioValue" id="scenarioCpa"></div><div class="scenarioLabel">effective CPA at selected reachable-lead count</div>
+      <div class="scenarioOptions" id="scenarioOptions"></div>
+      <div class="scenarioRead" id="scenarioRead"></div>
+    </div>
+  </div>
+</section>
+
+<section id="v02" class="section" data-component-id="v02-experiment-frame">
+  <div class="sectionHead"><h2 class="sectionTitle"><span class="sectionNo">05</span>V02 test frame</h2><p class="sectionDesc">Keep the creative, offer and audience constant. Change the conversion destination so the next spend buys one new answer.</p></div>
+  <div class="card testFrame">
+    <div class="testTop">
+      <div class="arm"><div class="armType">Control</div><div class="armTitle">Native Instant Form</div><div class="armRows"><div class="armRow"><span>Destination</span><b>Meta native form</b></div><div class="armRow"><span>Business reference</span><b>$21.53 CRM-delivered CPA</b></div><div class="armRow"><span>Truth source</span><b>First-party accepted signup</b></div></div></div>
+      <div class="difference"><div class="differenceIcon">⇄</div><b>Only change</b><span>Destination / conversion path</span></div>
+      <div class="arm"><div class="armType">Challenger</div><div class="armTitle">/first-access website</div><div class="armRows"><div class="armRow"><span>Destination</span><b>Website</b></div><div class="armRow"><span>Conversion truth</span><b>GA4 / backend accepted submit</b></div><div class="armRow"><span>Truth source</span><b>First-party accepted signup</b></div></div></div>
+    </div>
+    <div class="sharedConstants"><b>Hold constant</b><div class="constantList"><span class="constant">YOU SEE / HE SEES creative</span><span class="constant">First Access offer</span><span class="constant">Audience / geography</span><span class="constant">Major placement strategy</span></div></div>
+    <div class="testMetrics"><div class="testMetric"><strong>Primary</strong><p>First-party accepted unique signup CPA by destination.</p></div><div class="testMetric"><strong>Quality layer</strong><p>Reachable lead rate and cost per reachable lead.</p></div><div class="testMetric"><strong>Later business layer</strong><p>Consultation-request rate and booked-consult rate. CTR, CPC, form completion, placement delivery and video behavior remain diagnostic.</p></div></div>
+  </div>
+  <div class="card budgetLab">
+    <div class="budgetTop"><div><h3>Directional test budget</h3><p>Modeled at the current $21.53 constant-CPA assumption.</p></div><p>Accepted leads per arm</p></div>
+    <div class="budgetControls"><div class="budgetButtons" id="budgetButtons"></div><div class="budgetOutputs"><div class="budgetOutput"><span>One arm</span><b id="oneArm"></b></div><div class="budgetOutput"><span>Two arms</span><b id="twoArm"></b></div><div class="budgetOutput"><span>Assumed CPA</span><b>$21.53</b></div></div></div>
+    <div class="budgetCaveat">This is a planning scenario, not a forecast. The source memo uses 20 accepted leads per arm as its directional example and notes that smaller budgets should be labeled directional rather than causal.</div>
+  </div>
+</section>
+
+<section id="sources" class="section" data-component-id="source-inspector">
+  <div class="sectionHead"><h2 class="sectionTitle"><span class="sectionNo">06</span>Sources and definitions</h2><p class="sectionDesc">Reviewed source metadata, caveats and calculation boundaries.</p></div>
+  <details class="card sourceCard"><summary><span>Open source inspector</span><span>＋</span></summary><div class="sourceBody"><div class="sourceBlock"><h4>Reviewed source</h4><span class="sourceTag">Opus_First_Access_Meta_Report_V01.pdf</span><span class="sourceTag">snapshot Sep 15, 2026</span><span class="sourceTag">internal reviewed report</span><p>Derived from Meta exports and observed Aesthetix delivery. The dashboard uses the fresher $172.25 / 8-lead snapshot described in the memo.</p><div class="integrity">Integrity note: the seven displayed placement rows sum to $171.30, a $0.95 gap versus reviewed overall spend. Clicks and leads reconcile to 113 and 8. The omitted spend bucket is not identified in the memo.</div></div><div class="sourceBlock"><h4>Material caveats</h4><ul><li>Sep 15 is partial-day data.</li><li>7-day click / 1-day view attribution can backfill or move conversions after export.</li><li>8 Aesthetix contacts confirm CRM delivery, not reachability, qualification or booking value.</li><li>Placement conclusions are descriptive with only 8 observed conversions.</li><li>2026 Physicians &amp; Surgeons benchmarks are directional third-party context, not an OPUS target.</li></ul></div></div></details>
+</section>
+</main>
+</div>
+</div>
+<div class="drawerBackdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"><button class="drawerClose" id="drawerClose" aria-label="Close placement details">×</button><div id="drawerContent"></div></aside>
+
+<script src="/first-access-dashboard.js" defer></script>
+</body>
+</html>
