@@ -1,0 +1,62 @@
+{
+  "sourceMeta": {
+    "source": "Google Sheets controlled snapshot",
+    "snapshotVersion": "2026-09-15-v01",
+    "syncedOn": "Sep 19, 2026",
+    "sheetVisibility": "private"
+  },
+  "overall": {
+    "spend": 172.25,
+    "metaLeads": 8,
+    "aesthetixContacts": 8,
+    "crmDeliveredCpa": 21.53,
+    "linkCtrPct": 3.38,
+    "linkCpc": 1.52,
+    "frequency": 1.57,
+    "clickToLeadPct": 7.08,
+    "clicks": 113
+  },
+  "benchmarks": [
+    {"metric":"Link CTR","actual":3.38,"benchmark":4.18,"unit":"pct","higherIsBetter":true},
+    {"metric":"Link CPC","actual":1.52,"benchmark":1.68,"unit":"usd","higherIsBetter":false},
+    {"metric":"Click-to-lead","actual":7.08,"benchmark":6.41,"unit":"pct","higherIsBetter":true},
+    {"metric":"CPL","actual":21.53,"benchmark":32.14,"unit":"usd","higherIsBetter":false}
+  ],
+  "daily": [
+    {"date":"2026-09-11","label":"Sep 11","spend":32.1,"clicks":19,"leads":1,"cpl":32.1,"ctrPct":2.43,"partial":false},
+    {"date":"2026-09-12","label":"Sep 12","spend":44.51,"clicks":37,"leads":1,"cpl":44.51,"ctrPct":4.46,"partial":false},
+    {"date":"2026-09-13","label":"Sep 13","spend":36.93,"clicks":19,"leads":1,"cpl":36.93,"ctrPct":3.15,"partial":false},
+    {"date":"2026-09-14","label":"Sep 14","spend":44.09,"clicks":25,"leads":3,"cpl":14.7,"ctrPct":2.91,"partial":false},
+    {"date":"2026-09-15","label":"Sep 15*","spend":14.62,"clicks":13,"leads":2,"cpl":7.31,"ctrPct":4.89,"partial":true}
+  ],
+  "placements": [
+    {"placement":"Facebook Reels","spend":51.88,"clicks":17,"leads":2,"cpl":25.94,"ctrPct":1.43},
+    {"placement":"Feed","spend":26.42,"clicks":9,"leads":2,"cpl":13.21,"ctrPct":1.31},
+    {"placement":"In-stream reels","spend":26.26,"clicks":40,"leads":0,"cpl":null,"ctrPct":6.81},
+    {"placement":"Instagram Reels","spend":20.7,"clicks":3,"leads":1,"cpl":20.7,"ctrPct":0.9},
+    {"placement":"Facebook Stories","spend":28.83,"clicks":28,"leads":2,"cpl":14.42,"ctrPct":11.81},
+    {"placement":"Instagram Stories","spend":12.37,"clicks":8,"leads":1,"cpl":12.37,"ctrPct":3.83},
+    {"placement":"Facebook Notifications","spend":4.84,"clicks":8,"leads":0,"cpl":null,"ctrPct":11.94}
+  ],
+  "stages": [
+    {"label":"Meta lead","value":"8","status":"observed"},
+    {"label":"Aesthetix contact","value":"8","status":"observed"},
+    {"label":"Reachable","value":"Pending","status":"pending"},
+    {"label":"Qualified intent","value":"Pending","status":"pending"},
+    {"label":"Consult / booking","value":"Future","status":"future"}
+  ],
+  "gate": [
+    "Dedicated First Access workflow exists in Aesthetix.",
+    "Neutral treatment/custom-field mapping is live without breaking existing nurture or opportunity dependencies.",
+    "One controlled test lead proves source/tag → opportunity → nurture behavior end to end.",
+    "Existing leads have a human acknowledgment/follow-up owner while automation is pending.",
+    "Open scale-compliance items are re-verified before meaningful budget expansion."
+  ],
+  "reachScenarios": [
+    {"leads":8,"cpa":21.53125,"read":"All 8 observed contacts reachable"},
+    {"leads":6,"cpa":28.708333333333332,"read":"6 of 8 observed contacts reachable"},
+    {"leads":5,"cpa":34.45,"read":"5 of 8 observed contacts reachable"},
+    {"leads":4,"cpa":43.0625,"read":"4 of 8 observed contacts reachable"},
+    {"leads":3,"cpa":57.416666666666664,"read":"3 of 8 observed contacts reachable"}
+  ]
+}
